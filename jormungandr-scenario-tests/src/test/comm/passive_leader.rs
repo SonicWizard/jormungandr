@@ -1,8 +1,9 @@
 use crate::{
     node::{LeadershipMode, PersistenceMode},
-    test::utils,
+    test::utils::{self, SyncWaitParams},
     test::Result,
     Context, ScenarioResult,
+    Context,
 };
 use rand_chacha::ChaChaRng;
 
@@ -50,6 +51,7 @@ pub fn transaction_to_passive(mut context: Context<ChaChaRng>) -> Result<Scenari
         &passive,
     )?;
 
+    utils::wait_for_nodes_sync(SyncWaitParams::two_nodes());
     utils::assert_are_in_sync(vec![&passive, &leader])?;
 
     passive.shutdown()?;
@@ -123,6 +125,7 @@ pub fn leader_restart(mut context: Context<ChaChaRng>) -> Result<ScenarioResult>
         &passive,
     )?;
 
+    utils::wait_for_nodes_sync(SyncWaitParams::two_nodes());
     utils::assert_are_in_sync(vec![&passive, &leader])?;
 
     passive.shutdown()?;
@@ -175,6 +178,7 @@ pub fn passive_node_is_updated(mut context: Context<ChaChaRng>) -> Result<Scenar
         &leader,
     )?;
 
+    utils::wait_for_nodes_sync(SyncWaitParams::two_nodes());
     utils::assert_are_in_sync(vec![&passive, &leader])?;
 
     passive.shutdown()?;

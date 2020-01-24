@@ -5,7 +5,51 @@ use crate::{
     wallet::Wallet,
 };
 use jormungandr_lib::interfaces::FragmentStatus;
-use std::{fmt, thread, time::Duration};
+use std::{
+    fmt, thread,
+    time::{Duration, SystemTime},
+};
+
+#[derive(Clone, Debug)]
+pub struct SyncWaitParams {
+    pub no_of_nodes: u64,
+    pub longest_path_length: u64,
+}
+
+impl SyncWaitParams {
+    pub fn two_nodes() -> Self {
+        SyncWaitParams {
+            no_of_nodes: 2,
+            longest_path_length: 2,
+        }
+    }
+
+    pub fn no_of_nodes(&self) -> u64 {
+        self.no_of_nodes
+    }
+
+    pub fn longest_path_length(&self) -> u64 {
+        self.longest_path_length
+    }
+
+    fn calculate_wait_time(&self) -> u64 {
+        self.no_of_nodes + self.longest_path_length * 2
+    }
+
+    pub fn wait_time(&self) -> Duration {
+        Duration::from_secs(self.calculate_wait_time())
+    }
+
+    pub fn timeout(&self) -> Duration {
+        Duration::from_secs(self.calculate_wait_time() * 2)
+    }
+}
+
+pub fn wait_for_nodes_sync(sync_wait_params: SyncWaitParams) {
+    let wait_time = sync_wait_params.wait_time();
+    std::thread::sleep(wait_time);
+}
+
 
 pub fn assert_equals<A: fmt::Debug + PartialEq>(left: &A, right: &A, info: &str) -> Result<()> {
     if left != right {
@@ -49,7 +93,6 @@ pub fn assert_are_in_sync(nodes: Vec<&NodeController>) -> Result<()> {
                 first_node.log_content(),
                 node.alias(),
                 node.log_content()),
-
         )?;
         assert_equals(
             &block_height,
